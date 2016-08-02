@@ -1,0 +1,16 @@
+[Unit]
+Description=locutus controller application for Ryu
+After=network.target
+
+[Service]
+Type=forking
+ExecStartPre=-/usr/bin/mkdir /var/run/locutus
+ExecStartPre=/usr/bin/chown -R locutus:locutus /var/run/locutus
+ExecStart=/opt/locutus/bin/supervisord -c /etc/locutus/supervisord.conf
+ExecReload=/opt/locutus/bin/supervisorctl -c /etc/locutus/supervisord.conf reload
+ExecStop=/opt/locutus/bin/supervisorctl -c /etc/locutus/supervisord.conf shutdown
+Restart=on-failure
+PIDFile=/var/run/locutus/supervisord.pid
+
+[Install]
+WantedBy=multi-user.target

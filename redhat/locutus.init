@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# locutus        Runs the Ryu application "locutus" via supervisord
+#
+# chkconfig:	- 95 04
+#
+# description:  locutus is a Ryu controller application providing flowspace slicing functionality,
+#               similar to FlowSpace Firewall or FLowvisor.
+#
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="locutus flowspace slicer"
+NAME=locutus
+BASEDIR=/opt/${NAME}/bin
+CONFDIR=/etc/${NAME}
+LOCKFILE=/var/lock/subsys/${NAME}
+
+# pull in sysconfig settings
+[ -f /etc/sysconfig/${NAME} ] && . /etc/sysconfig/${NAME}
+
+source /opt/rh/python27/enable
+
+start() {
+    echo -n $"Starting ${NAME}: "
+    (${BASEDIR}/supervisord -c ${CONFDIR}/supervisord.conf 2>/dev/null) && success || failure
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch ${LOCKFILE}
+}
+
+stop() {
+    echo -n $"Stopping ${NAME}: "
+    (${BASEDIR}/supervisorctl -c ${CONFDIR}/supervisord.conf shutdown >/dev/null) && success || failure
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f ${LOCKFILE}
+}
+
+restart() {
+    echo -n $"Restarting ${NAME}: "
+    (${BASEDIR}/supervisorctl -c ${CONFDIR}/supervisord.conf reload >/dev/null) && success || failure
+    RETVAL=$?
+    echo
+}
+
+status() {
+    if [ -f ${LOCKFILE} ]; then
+        ${BASEDIR}/supervisorctl -c ${CONFDIR}/supervisord.conf status
+    else
+        echo "${NAME} not running."
+    fi
+    RETVAL=$?
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop) 
+    stop
+    ;;
+  restart|force-reload|reload)
+    restart
+    ;;
+  condrestart)
+    [ -f ${LOCKFILE} ] && restart
+    ;;
+  status)
+    status
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|status|restart|reload|force-reload|condrestart}"
+    exit 1
+esac
+
+exit $RETVAL
