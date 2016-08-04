@@ -55,47 +55,117 @@ class Locutus(app_manager.RyuApp):
         mapper = wsgi.mapper
         wsgi.registory['LocutusController'] = self.data
 
-        requirements = {'switch_id': SWITCHID_PATTERN}
+        requirements = None
+        path = '/devices'
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_devices',
+                       conditions=dict(method=['GET']))
+
+        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
         path = '/devices/{switch_id}'
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_data',
+                       action='get_device_data',
+                       conditions=dict(method=['GET']))
+
+        requirements = None
+        path = '/devices/policies'
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_all_device_policies',
                        conditions=dict(method=['GET']))
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='set_data',
-                       conditions=dict(method=['POST']))
+                       action='set_all_device_policies',
+                       conditions=dict(method=['PUT']))
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='delete_data',
+                       action='delete_all_device_policies',
                        conditions=dict(method=['DELETE']))
 
-        requirements = {'domain_id': DOMAINID_PATTERN}
+        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
+        path = '/devices/{switch_id}/policy'
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_device_policy',
+                       conditions=dict(method=['GET']))
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='set_device_policy',
+                       conditions=dict(method=['PUT']))
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='delete_device_policy',
+                       conditions=dict(method=['DELETE']))
+
+        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
+        path = '/devices/{switch_id}/domains'
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_device_domains',
+                       conditions=dict(method=['GET']))
+
+        requirements = None
+        path = '/domains'
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_domains',
+                       conditions=dict(method=['GET']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='create_domain',
+                       conditions=dict(method=['POST']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='delete_domain',
+                       conditions=dict(method=['DELETE']))
+
         path = '/domains/{domain_id}'
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_data',
+                       action='get_domain_configuration',
                        conditions=dict(method=['GET']))
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='set_data',
+                       action='set_domain_configuration',
+                       conditions=dict(method=['PUT']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='delete_domain_configuration',
+                       conditions=dict(method=['DELETE']))
+
+        path = '/domains/{domain_id}/rules'
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='get_domain_rules',
+                       conditions=dict(method=['GET']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='update_domain_rule',
+                       conditions=dict(method=['PUT']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='create_domain_rule',
                        conditions=dict(method=['POST']))
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='delete_data',
+                       action='delete_domain_rule',
                        conditions=dict(method=['DELETE']))
 
-        
-# For API, the following is needed:
-# 1) A means of retrieving the list of connected datapaths
-# 2) A means of listing "slices" for a given datapath, or for *all* datapaths
-# 3) A means of getting/setting/deleting data for any of those datapaths or slices
-# 4) A means of blacklisting selected datapaths, or all datapaths that are unknown
-# 5) As far as data is concerned - data to be set should correspond to how we want the switch to be sliced, and what the controller is for that slice
-# 6) Which leads us to: we should be able to query the list of slices
-# 7) Should we be able to assign a slice owner? How do we identify the slice owner? How do we validate their right to control the slice?
-# 8) Nice to have - the ability to rate-limit packet-in forwarding to upstream controller
-# 9) SSL cert validation for datapaths, and upstream controllers - plus sending client certificates.
+# For API, the following is needed initially:
+# 1) A means of retrieving the list of connected datapaths.
+# 2) A means of listing domains associated with a given datapath, or for *all* datapaths.
+# 3) A means of getting/setting/deleting administrative policy (rate limiting, blacklisting) for a datapath, whether connected or not.
+# 4) A means of creating/listing/deleting domains.
+# 5) A means of getting/setting/deleting configuration for domains.
+# 6) A means of assigning sections of the known and administratively allowed "flowspace" to domains, altering those assigned sections, or deleting them.
+#
+# Additions required (to API, or otherwise):
+# 1) A means of authN/authZ, and fine grained ACLs, for administrating who can create domains/assign administrative policy to datapaths/etc.
+# 2) Should we be able to assign a slice owner? How do we identify the slice owner? How do we validate their right to control the slice?
+# 3) SSL cert validation for datapaths, and upstream controllers - plus sending client certificates.
+
         
     @set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
     def datapath_handler(self, ev):
