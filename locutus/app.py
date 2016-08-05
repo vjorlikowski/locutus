@@ -63,7 +63,7 @@ class Locutus(app_manager.RyuApp):
         path = '/devices/{switch_id}'
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_device_status',
+                       action='get_device',
                        conditions=dict(method=['GET']))
 
         requirements = {'switch_id': SWITCHID_PATTERN}
@@ -98,16 +98,20 @@ class Locutus(app_manager.RyuApp):
                        requirements=requirements,
                        action='create_domain',
                        conditions=dict(method=['POST']))
-        mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='delete_domain',
-                       conditions=dict(method=['DELETE']))
 
         path = '/domains/{domain_id}'
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_domain_status',
+                       action='get_domain',
                        conditions=dict(method=['GET']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='update_domain',
+                       conditions=dict(method=['PUT']))
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='delete_domain',
+                       conditions=dict(method=['DELETE']))
 
         path = '/domains/{domain_id}/rules'
         mapper.connect('domains', path, controller=LocutusController,
@@ -116,12 +120,14 @@ class Locutus(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='update_domain_rule',
-                       conditions=dict(method=['PUT']))
-        mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='create_domain_rule',
                        conditions=dict(method=['POST']))
+
+        path = '/domains/{domain_id}/rules/{rule_id}'
+        mapper.connect('domains', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='update_domain_rule',
+                       conditions=dict(method=['PUT']))
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
                        action='delete_domain_rule',
@@ -214,12 +220,12 @@ class LocutusController(ControllerBase):
 
     # GET /devices
     @rest_command
-    def get_devices(self, req, switch_id, **_kwargs):
+    def get_devices(self, req, **_kwargs):
         pass
 
     # GET /devices/{switch_id}
     @rest_command
-    def get_device_status(self, req, switch_id, **_kwargs):
+    def get_device(self, req, switch_id, **_kwargs):
         pass
 
     # GET /devices/{switch_id}/policy
@@ -244,40 +250,45 @@ class LocutusController(ControllerBase):
 
     # GET /domains
     @rest_command
-    def get_domains(self, req, switch_id, **_kwargs):
+    def get_domains(self, req, **_kwargs):
         pass
 
     # POST /domains
     @rest_command
-    def create_domain(self, req, switch_id, **_kwargs):
-        pass
-
-    # DELETE /domains
-    @rest_command
-    def delete_domain(self, req, switch_id, **_kwargs):
+    def create_domain(self, req, **_kwargs):
         pass
 
     # GET /domains/{domain_id}
     @rest_command
-    def get_domain_status(self, req, switch_id, **_kwargs):
+    def get_domain(self, req, domain_id, **_kwargs):
+        pass
+
+    # PUT /domains/{domain_id}
+    @rest_command
+    def update_domain(self, req, domain_id, **_kwargs):
+        pass
+
+    # DELETE /domains/{domain_id}
+    @rest_command
+    def delete_domain(self, req, domain_id, **_kwargs):
         pass
 
     # GET /domains/{domain_id}/rules
     @rest_command
-    def get_domain_rules(self, req, switch_id, **_kwargs):
-        pass
-
-    # PUT /domains/{domain_id}/rules
-    @rest_command
-    def update_domain_rule(self, req, switch_id, **_kwargs):
+    def get_domain_rules(self, req, domain_id, **_kwargs):
         pass
 
     # POST /domains/{domain_id}/rules
     @rest_command
-    def create_domain_rule(self, req, switch_id, **_kwargs):
+    def create_domain_rule(self, req, domain_id, **_kwargs):
         pass
 
-    # DELETE /domains/{domain_id}/rules
+    # PUT /domains/{domain_id}/rules/{rule_id}
     @rest_command
-    def delete_domain_rule(self, req, switch_id, **_kwargs):
+    def update_domain_rule(self, req, domain_id, rule_id, **_kwargs):
+        pass
+
+    # DELETE /domains/{domain_id}/rules/{rule_id}
+    @rest_command
+    def delete_domain_rule(self, req, switch_id, rule_id, **_kwargs):
         pass
