@@ -13,9 +13,6 @@
 
 # Locutus controller application entry point/main program
 
-import requests
-import urllib3.contrib.pyopenssl
-
 from ryu.app.wsgi import ControllerBase
 from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
@@ -30,7 +27,7 @@ from ryu.lib import hub
 
 from locutus import *
 from locutus.device import *
-from locutus.domains import *
+from locutus.domain import *
 from locutus.util import *
 
 
@@ -62,29 +59,14 @@ class Locutus(app_manager.RyuApp):
                        action='get_devices',
                        conditions=dict(method=['GET']))
 
-        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
+        requirements = {'switch_id': SWITCHID_PATTERN}
         path = '/devices/{switch_id}'
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_device_data',
+                       action='get_device_status',
                        conditions=dict(method=['GET']))
 
-        requirements = None
-        path = '/devices/policies'
-        mapper.connect('devices', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='get_all_device_policies',
-                       conditions=dict(method=['GET']))
-        mapper.connect('devices', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='set_all_device_policies',
-                       conditions=dict(method=['PUT']))
-        mapper.connect('devices', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='delete_all_device_policies',
-                       conditions=dict(method=['DELETE']))
-
-        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
+        requirements = {'switch_id': SWITCHID_PATTERN}
         path = '/devices/{switch_id}/policy'
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
@@ -92,14 +74,14 @@ class Locutus(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
-                       action='set_device_policy',
+                       action='update_device_policy',
                        conditions=dict(method=['PUT']))
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
                        action='delete_device_policy',
                        conditions=dict(method=['DELETE']))
 
-        requirements = {'switch_id': dpid_lib.DPID_PATTERN}
+        requirements = {'switch_id': SWITCHID_PATTERN}
         path = '/devices/{switch_id}/domains'
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
@@ -124,16 +106,8 @@ class Locutus(app_manager.RyuApp):
         path = '/domains/{domain_id}'
         mapper.connect('domains', path, controller=LocutusController,
                        requirements=requirements,
-                       action='get_domain_configuration',
+                       action='get_domain_status',
                        conditions=dict(method=['GET']))
-        mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='set_domain_configuration',
-                       conditions=dict(method=['PUT']))
-        mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
-                       action='delete_domain_configuration',
-                       conditions=dict(method=['DELETE']))
 
         path = '/domains/{domain_id}/rules'
         mapper.connect('domains', path, controller=LocutusController,
@@ -153,20 +127,6 @@ class Locutus(app_manager.RyuApp):
                        action='delete_domain_rule',
                        conditions=dict(method=['DELETE']))
 
-# For API, the following is needed initially:
-# 1) A means of retrieving the list of connected datapaths.
-# 2) A means of listing domains associated with a given datapath, or for *all* datapaths.
-# 3) A means of getting/setting/deleting administrative policy (rate limiting, blacklisting) for a datapath, whether connected or not.
-# 4) A means of creating/listing/deleting domains.
-# 5) A means of getting/setting/deleting configuration for domains.
-# 6) A means of assigning sections of the known and administratively allowed "flowspace" to domains, altering those assigned sections, or deleting them.
-#
-# Additions required (to API, or otherwise):
-# 1) A means of authN/authZ, and fine grained ACLs, for administrating who can create domains/assign administrative policy to datapaths/etc.
-# 2) Should we be able to assign a slice owner? How do we identify the slice owner? How do we validate their right to control the slice?
-# 3) SSL cert validation for datapaths, and upstream controllers - plus sending client certificates.
-
-        
     @set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
     def datapath_handler(self, ev):
         if ev.enter:
@@ -216,8 +176,6 @@ class Locutus(app_manager.RyuApp):
     def stats_reply_handler_v1_2(self, ev):
         self._stats_reply_handler(ev)
 
-    #TODO: Update routing table when port status is changed.
-
 
 class LocutusController(ControllerBase):
     _DEVICE_LIST = {}
@@ -246,12 +204,80 @@ class LocutusController(ControllerBase):
     def reconnect_device(cls, dp, ports, waiters):
         assert dp is not None
         if dp.id in cls._DEVICE_LIST:
-            # Datapath changed, but router is still present.
-            # Force re-creation of router object.
             cls.unregister_device(dp)
             cls.register_device(dp, ports, waiters)
 
     @classmethod
     def packet_in_handler(cls, msg):
         dp_id = msg.datapath.id
-        # FIXME: Implement
+        pass
+
+    # GET /devices
+    @rest_command
+    def get_devices(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /devices/{switch_id}
+    @rest_command
+    def get_device_status(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /devices/{switch_id}/policy
+    @rest_command
+    def get_device_policy(self, req, switch_id, **_kwargs):
+        pass
+
+    # PUT /devices/{switch_id}/policy
+    @rest_command
+    def update_device_policy(self, req, switch_id, **_kwargs):
+        pass
+
+    # DELETE /devices/{switch_id}/policy
+    @rest_command
+    def delete_device_policy(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /devices/{switch_id}/domains
+    @rest_command
+    def get_device_domains(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /domains
+    @rest_command
+    def get_domains(self, req, switch_id, **_kwargs):
+        pass
+
+    # POST /domains
+    @rest_command
+    def create_domain(self, req, switch_id, **_kwargs):
+        pass
+
+    # DELETE /domains
+    @rest_command
+    def delete_domain(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /domains/{domain_id}
+    @rest_command
+    def get_domain_status(self, req, switch_id, **_kwargs):
+        pass
+
+    # GET /domains/{domain_id}/rules
+    @rest_command
+    def get_domain_rules(self, req, switch_id, **_kwargs):
+        pass
+
+    # PUT /domains/{domain_id}/rules
+    @rest_command
+    def update_domain_rule(self, req, switch_id, **_kwargs):
+        pass
+
+    # POST /domains/{domain_id}/rules
+    @rest_command
+    def create_domain_rule(self, req, switch_id, **_kwargs):
+        pass
+
+    # DELETE /domains/{domain_id}/rules
+    @rest_command
+    def delete_domain_rule(self, req, switch_id, **_kwargs):
+        pass

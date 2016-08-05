@@ -56,6 +56,8 @@ TCP = tcp.tcp.__name__
 UDP = udp.udp.__name__
 DHCP = dhcp.dhcp.__name__
 
+SWITCHID_PATTERN = dpid_lib.DPID_PATTERN + r'|all'
+
 VLANID_NONE = 0
 VLANID_MIN = 2
 VLANID_MAX = 4094
