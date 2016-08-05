@@ -3,7 +3,7 @@
 # the text of which is included in this distribution within the file
 # named LICENSE.
 #
-a# Portions of this software are derived from the "rest_router" controller
+# Portions of this software are derived from the "rest_router" controller
 # application included with Ryu (http://osrg.github.io/ryu/), which is:
 # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
 #
