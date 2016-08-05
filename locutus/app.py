@@ -52,10 +52,8 @@ class Locutus(app_manager.RyuApp):
         mapper = wsgi.mapper
         wsgi.registory['LocutusController'] = self.data
 
-        requirements = None
         path = '/devices'
         mapper.connect('devices', path, controller=LocutusController,
-                       requirements=requirements,
                        action='get_devices',
                        conditions=dict(method=['GET']))
 
@@ -88,48 +86,38 @@ class Locutus(app_manager.RyuApp):
                        action='get_device_domains',
                        conditions=dict(method=['GET']))
 
-        requirements = None
         path = '/domains'
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='get_domains',
                        conditions=dict(method=['GET']))
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='create_domain',
                        conditions=dict(method=['POST']))
 
         path = '/domains/{domain_id}'
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='get_domain',
                        conditions=dict(method=['GET']))
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='update_domain',
                        conditions=dict(method=['PUT']))
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='delete_domain',
                        conditions=dict(method=['DELETE']))
 
         path = '/domains/{domain_id}/rules'
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='get_domain_rules',
                        conditions=dict(method=['GET']))
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='create_domain_rule',
                        conditions=dict(method=['POST']))
 
         path = '/domains/{domain_id}/rules/{rule_id}'
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='update_domain_rule',
                        conditions=dict(method=['PUT']))
         mapper.connect('domains', path, controller=LocutusController,
-                       requirements=requirements,
                        action='delete_domain_rule',
                        conditions=dict(method=['DELETE']))
 
