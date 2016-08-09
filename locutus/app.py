@@ -76,6 +76,10 @@ class Locutus(app_manager.RyuApp):
                        conditions=dict(method=['PUT']))
         mapper.connect('devices', path, controller=LocutusController,
                        requirements=requirements,
+                       action='create_device_policy',
+                       conditions=dict(method=['POST']))
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
                        action='delete_device_policy',
                        conditions=dict(method=['DELETE']))
 
@@ -224,6 +228,11 @@ class LocutusController(ControllerBase):
     # PUT /devices/{switch_id}/policy
     @rest_command
     def update_device_policy(self, req, switch_id, **_kwargs):
+        pass
+
+    # POST /devices/{switch_id}/policy
+    @rest_command
+    def create_device_policy(self, req, switch_id, **_kwargs):
         pass
 
     # DELETE /devices/{switch_id}/policy

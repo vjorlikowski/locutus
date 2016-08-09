@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Duke University.
+# Copyright (c) 2016 Duke University.
 # This software is distributed under the terms of the MIT License,
 # the text of which is included in this distribution within the file
 # named LICENSE.
