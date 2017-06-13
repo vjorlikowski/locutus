@@ -231,7 +231,6 @@ class LocutusController(ControllerBase):
         logger = DeviceLoggerAdapter(cls._LOGGER, {'sw_id': dpid_lib.dpid_to_str(dp.id)})
 
         if dp.id in cls._DEVICE_LIST:
-            cls._DEVICE_LIST[dp.id].delete()
             del cls._DEVICE_LIST[dp.id]
 
         logger.info('Device unregistered.')
