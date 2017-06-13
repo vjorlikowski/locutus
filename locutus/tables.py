@@ -14,3 +14,16 @@
 
 from locutus import *
 from locutus.util import *
+
+
+class PortData(dict):
+    def __init__(self, ports):
+        super(PortData, self).__init__()
+        for port in ports:
+            self[port.port_no] = port
+
+    def update(self, port):
+        self[port.port_no] = port
+
+    def delete(self, port):
+        del self[port.port_no]

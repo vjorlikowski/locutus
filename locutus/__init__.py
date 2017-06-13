@@ -58,6 +58,8 @@ DHCP = dhcp.dhcp.__name__
 
 SWITCHID_PATTERN = dpid_lib.DPID_PATTERN + r'|all'
 
+COOKIE_DEFAULT_ID = 0
+
 VLANID_NONE = 0
 VLANID_MIN = 2
 VLANID_MAX = 4094

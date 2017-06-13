@@ -63,6 +63,10 @@ class Locutus(app_manager.RyuApp):
                        requirements=requirements,
                        action='get_device',
                        conditions=dict(method=['GET']))
+        mapper.connect('devices', path, controller=LocutusController,
+                       requirements=requirements,
+                       action='perform_device_action',
+                       conditions=dict(method=['PUT']))
 
         requirements = {'switch_id': SWITCHID_PATTERN}
         path = '/devices/{switch_id}/policy'
@@ -124,6 +128,27 @@ class Locutus(app_manager.RyuApp):
         mapper.connect('domains', path, controller=LocutusController,
                        action='delete_domain_rule',
                        conditions=dict(method=['DELETE']))
+
+# Device info should return what OpenFlow version is being used; how
+# long that switch has been connected, too...
+# Domain info should return what OpenFlow version was negotiated
+# with the controller, and if the controller is connected (and how
+# long it has been connected...)
+# *If* a given controller only supports version 1.0, but other
+# *controllers support 1.3 (and are currently connected to the
+# *switch) - what kind of transcoding is necessary? Particularly in
+# *the case of switches that have multiple tables?
+# There is a desire to specify multiple controllers (MASTER, EQUAL
+# and serial backup) for a given domain...
+# Offer a policy for a DPID to be force-negotiated down to a
+# particular OpenFlow rev below its maximum supported; this allows
+# us to get around trying to translate from OF 1.0 on the controller
+# to OF 1.3 on the switch (for now)
+# Have "sleep" be the command for blacklisting a switch (as an
+# Easter Egg), in the per-switch policy...or, an administrative action
+# - immediate sleep as well as disconnect the switch...
+# Policies extended for domains, too? "shut" and "no shut" for a domain?
+# What other information do you envision receiving from a device?
 
     @set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
     def datapath_handler(self, ev):
@@ -191,24 +216,62 @@ class LocutusController(ControllerBase):
     @classmethod
     def register_device(cls, dp, ports, waiters):
         logger = DeviceLoggerAdapter(cls._LOGGER, {'sw_id': dpid_lib.dpid_to_str(dp.id)})
+
+        try:
+            device = Device(dp, ports, waiters, logger)
+        except OFPUnknownVersion as message:
+            logger.error(str(message))
+            return
+
+        cls._DEVICE_LIST.setdefault(dp.id, device)
         logger.info('Device registered.')
 
     @classmethod
     def unregister_device(cls, dp):
         logger = DeviceLoggerAdapter(cls._LOGGER, {'sw_id': dpid_lib.dpid_to_str(dp.id)})
+
+        if dp.id in cls._DEVICE_LIST:
+            cls._DEVICE_LIST[dp.id].delete()
+            del cls._DEVICE_LIST[dp.id]
+
         logger.info('Device unregistered.')
 
     @classmethod
     def reconnect_device(cls, dp, ports, waiters):
-        assert dp is not None
+        if dp is None:
+            logger.error('Null datapath in reconnection handler; aborting handler.')
+            return
+
         if dp.id in cls._DEVICE_LIST:
             cls.unregister_device(dp)
             cls.register_device(dp, ports, waiters)
 
     @classmethod
+    def device_datapath_port_update_handler(cls, dp, port):
+        if dp is None:
+            logger.error('Null datapath in port update handler; aborting handler.')
+            return
+
+        if dp.id in cls._DEVICE_LIST:
+            device = cls._DEVICE_LIST[dp.id]
+            device.port_update_handler(port)
+
+    @classmethod
+    def device_datapath_port_delete_handler(cls, dp, port):
+        if dp is None:
+            logger.error('Null datapath in port delete handler; aborting handler.')
+            return
+
+        if dp.id in cls._DEVICE_LIST:
+            device = cls._DEVICE_LIST[dp.id]
+            device.port_delete_handler(port)
+
+    @classmethod
     def packet_in_handler(cls, msg):
         dp_id = msg.datapath.id
-        pass
+        if dp_id in cls._DEVICE_LIST:
+            device = cls._DEVICE_LIST[dp_id]
+            device.packet_in_handler(msg)
 
     # GET /devices
     @rest_command
@@ -218,6 +281,11 @@ class LocutusController(ControllerBase):
     # GET /devices/{switch_id}
     @rest_command
     def get_device(self, req, switch_id, **_kwargs):
+        pass
+
+    # PUT /devices/{switch_id}
+    @rest_command
+    def perform_device_action(self, req, switch_id, **_kwargs):
         pass
 
     # GET /devices/{switch_id}/policy
